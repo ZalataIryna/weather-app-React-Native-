@@ -12,6 +12,7 @@ import {
   StyleSheet,
   View,
   Text,
+  PermissionsAndroid,
 } from 'react-native';
 
 import {
@@ -43,20 +44,25 @@ class App extends Component {
     }, 5000);
   }
 
-  getLocation() {
-    Geolocation.getCurrentPosition(
-      ({coords: {longitude, latitude}}) => {
-        console.log('From location function', longitude, latitude);
-        this.setState({
-          longitude: longitude,
-          latitude: latitude,
-        });
-      },
-      (error) => {
-        console.log(error.code, error.message);
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+  async getLocation() {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
     );
+    if (PermissionsAndroid.RESULTS.GRANTED === 'granted') {
+      Geolocation.getCurrentPosition(
+        ({coords: {longitude, latitude}}) => {
+          console.log('From location function', longitude, latitude);
+          this.setState({
+            longitude: longitude,
+            latitude: latitude,
+          });
+        },
+        (error) => {
+          console.log(error.code, error.message);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
+    }
   }
 
   async getWeather() {
@@ -65,8 +71,8 @@ class App extends Component {
       const result = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${this.state.latitude}&lon=${this.state.longitude}&appid=${API_KEY}`,
       );
-      console.log('api', result);
-      const {weather, main} = result.json();
+      // console.log('api', await result.json());
+      const {weather, main} = await result.json();
       console.log('From weather function', weather, main);
       const tempCelsius = (main.temp - 32) / 1.8;
       this.setState({
@@ -89,7 +95,7 @@ class App extends Component {
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>
                 Today's temperature is {this.state.temperature} Celcius and
-                humidity is {this.state.humidity}
+                humidity is {this.state.humidity}%
               </Text>
               <Text style={styles.sectionTitle}>
                 It's {this.state.description} outside
@@ -97,7 +103,9 @@ class App extends Component {
             </View>
           </>
         ) : (
-          <Text style={styles.sectionTitle}>Weather is not defined. Try later</Text>
+          <Text style={styles.sectionTitle}>
+            Weather is not defined. Try later
+          </Text>
         )}
       </>
     );
