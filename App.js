@@ -24,6 +24,7 @@ class App extends Component {
     latitude: 0,
     hasLocation: false,
     currentCity: '',
+    windSpeed: 0,
   };
 
   componentDidMount() {
@@ -60,18 +61,15 @@ class App extends Component {
       const result = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${this.state.latitude}&lon=${this.state.longitude}&appid=${API_KEY}`,
       );
-      const cityResult = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${this.state.latitude}&longitude=${this.state.longitude}&localityLanguage=en`,
-      );
-      const {city} = await cityResult.json();
-      const {weather, main} = await result.json();
+      const {weather, main, wind, name} = await result.json();
       const tempCelsius = Math.floor(main.temp - 273.15);
       this.setState({
         temperature: tempCelsius,
         humidity: main.humidity,
         description: weather[0].description,
         hasLocation: true,
-        currentCity: city,
+        currentCity: name,
+        windSpeed: wind.speed,
       });
     } catch (err) {
       console.log('Api call error');
@@ -91,13 +89,16 @@ class App extends Component {
                 %.
               </Text>
               <Text style={styles.sectionTitle}>
+                The wind speed is {this.state.windSpeed} km/hr.
+              </Text>
+              <Text style={styles.sectionTitle}>
                 It's {this.state.description} outside.
               </Text>
             </View>
           </>
         ) : (
           <Text style={styles.sectionTitle}>
-            Weather is not defined. Try later
+            Weather is not defined yet. Please, wait
           </Text>
         )}
       </>
