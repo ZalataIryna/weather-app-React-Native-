@@ -74,7 +74,7 @@ class App extends Component {
       // console.log('api', await result.json());
       const {weather, main} = await result.json();
       console.log('From weather function', weather, main);
-      const tempCelsius = (main.temp - 32) / 1.8;
+      const tempCelsius = Math.floor(main.temp - 273.15);
       this.setState({
         temperature: tempCelsius,
         humidity: main.humidity,
