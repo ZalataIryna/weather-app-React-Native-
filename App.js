@@ -7,21 +7,9 @@
  */
 
 import React, {Component} from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  View,
-  Text,
-  PermissionsAndroid,
-} from 'react-native';
+import {StyleSheet, View, Text, PermissionsAndroid} from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import Geolocation from 'react-native-geolocation-service';
 
@@ -35,6 +23,7 @@ class App extends Component {
     longitude: 0,
     latitude: 0,
     hasLocation: false,
+    currentCity: '',
   };
 
   componentDidMount() {
@@ -51,7 +40,7 @@ class App extends Component {
     if (PermissionsAndroid.RESULTS.GRANTED === 'granted') {
       Geolocation.getCurrentPosition(
         ({coords: {longitude, latitude}}) => {
-          console.log('From location function', longitude, latitude);
+          // console.log('From location function', longitude, latitude);
           this.setState({
             longitude: longitude,
             latitude: latitude,
@@ -67,19 +56,22 @@ class App extends Component {
 
   async getWeather() {
     try {
-      console.log('data from weather function', this.state.latitude);
+      // console.log('data from weather function', this.state.latitude);
       const result = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?lat=${this.state.latitude}&lon=${this.state.longitude}&appid=${API_KEY}`,
       );
-      // console.log('api', await result.json());
+      const cityResult = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${this.state.latitude}&longitude=${this.state.longitude}&localityLanguage=en`,
+      );
+      const {city} = await cityResult.json();
       const {weather, main} = await result.json();
-      console.log('From weather function', weather, main);
       const tempCelsius = Math.floor(main.temp - 273.15);
       this.setState({
         temperature: tempCelsius,
         humidity: main.humidity,
         description: weather[0].description,
         hasLocation: true,
+        currentCity: city,
       });
     } catch (err) {
       console.log('Api call error');
@@ -94,11 +86,12 @@ class App extends Component {
           <>
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>
-                Today's temperature is {this.state.temperature} Celcius and
-                humidity is {this.state.humidity}%
+                Today's temperature in {this.state.currentCity} is{' '}
+                {this.state.temperature}°C and humidity is {this.state.humidity}
+                %.
               </Text>
               <Text style={styles.sectionTitle}>
-                It's {this.state.description} outside
+                It's {this.state.description} outside.
               </Text>
             </View>
           </>
